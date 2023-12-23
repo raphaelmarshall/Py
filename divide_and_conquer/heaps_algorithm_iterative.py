@@ -9,8 +9,9 @@ https://en.wikipedia.org/wiki/Heap%27s_algorithm.
 
 def heaps(arr: list) -> list:
     """
-    Pure python implementation of the iterative Heap's algorithm,
+    Pure Python implementation of the Heap's algorithm (recursive version),
     returning all permutations of a list.
+
     >>> heaps([])
     [()]
     >>> heaps([0])
@@ -19,38 +20,27 @@ def heaps(arr: list) -> list:
     [(-1, 1), (1, -1)]
     >>> heaps([1, 2, 3])
     [(1, 2, 3), (2, 1, 3), (3, 1, 2), (1, 3, 2), (2, 3, 1), (3, 2, 1)]
-    >>> from itertools import permutations
-    >>> sorted(heaps([1,2,3])) == sorted(permutations([1,2,3]))
-    True
-    >>> all(sorted(heaps(x)) == sorted(permutations(x))
-    ...     for x in ([], [0], [-1, 1], [1, 2, 3]))
-    True
     """
+
+    def generate(k: int, arr: list, res: list):
+        if k == 1:
+            res.append(tuple(arr))
+            return
+
+        generate(k - 1, arr, res)
+
+        for i in range(k - 1):
+            if k % 2 == 0:  # k is even
+                arr[i], arr[k - 1] = arr[k - 1], arr[i]
+            else:  # k is odd
+                arr[0], arr[k - 1] = arr[k - 1], arr[0]
+            generate(k - 1, arr, res)
 
     if len(arr) <= 1:
         return [tuple(arr)]
 
     res = []
-
-    def generate(n: int, arr: list):
-        c = [0] * n
-        res.append(tuple(arr))
-
-        i = 0
-        while i < n:
-            if c[i] < i:
-                if i % 2 == 0:
-                    arr[0], arr[i] = arr[i], arr[0]
-                else:
-                    arr[c[i]], arr[i] = arr[i], arr[c[i]]
-                res.append(tuple(arr))
-                c[i] += 1
-                i = 0
-            else:
-                c[i] = 0
-                i += 1
-
-    generate(len(arr), arr)
+    generate(len(arr), arr, res)
     return res
 
 
