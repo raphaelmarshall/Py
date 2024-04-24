@@ -173,7 +173,7 @@ class HashTable:
         self.values[key] = data
         self._keys[key] = data
 
-    def _collision_resolution(self, key, data=None):
+    def _collision_resolution(self, key, data=None):  # noqa: ARG002
         """
         This method is a type of open addressing which is used for handling collision.
 
