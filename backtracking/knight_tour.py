@@ -1,98 +1,95 @@
-# Knight Tour Intro: https://www.youtube.com/watch?v=ab_dY3dZFHM
-
 from __future__ import annotations
 
+from typing import ClassVar
 
-def get_valid_pos(position: tuple[int, int], n: int) -> list[tuple[int, int]]:
+
+class KnightTourSolver:
     """
-    Find all the valid positions a knight can move to from the current position.
-
-    >>> get_valid_pos((1, 3), 4)
-    [(2, 1), (0, 1), (3, 2)]
+    Represents a solver for the Knight's Tour problem.
     """
 
-    y, x = position
-    positions = [
-        (y + 1, x + 2),
-        (y - 1, x + 2),
-        (y + 1, x - 2),
-        (y - 1, x - 2),
-        (y + 2, x + 1),
-        (y + 2, x - 1),
-        (y - 2, x + 1),
-        (y - 2, x - 1),
+    MOVES: ClassVar[list[tuple[int, int]]] = [
+        (1, 2),
+        (-1, 2),
+        (1, -2),
+        (-1, -2),
+        (2, 1),
+        (-2, 1),
+        (2, -1),
+        (-2, -1),
     ]
-    permissible_positions = []
 
-    for position in positions:
-        y_test, x_test = position
-        if 0 <= y_test < n and 0 <= x_test < n:
-            permissible_positions.append(position)
+    def __init__(self, board_size: int):
+        """
+        Initializes the KnightTourSolver with the specified board size.
+        """
+        self.board_size = board_size
+        self.board = [[0 for _ in range(board_size)] for _ in range(board_size)]
 
-    return permissible_positions
-
-
-def is_complete(board: list[list[int]]) -> bool:
-    """
-    Check if the board (matrix) has been completely filled with non-zero values.
-
-    >>> is_complete([[1]])
-    True
-
-    >>> is_complete([[1, 2], [3, 0]])
-    False
-    """
-
-    return not any(elem == 0 for row in board for elem in row)
-
-
-def open_knight_tour_helper(
-    board: list[list[int]], pos: tuple[int, int], curr: int
-) -> bool:
-    """
-    Helper function to solve knight tour problem.
-    """
-
-    if is_complete(board):
-        return True
-
-    for position in get_valid_pos(pos, len(board)):
+    def _is_valid_move(self, position: tuple[int, int], move: tuple[int, int]) -> bool:
+        """
+        Checks if a move is valid from the current position.
+        """
         y, x = position
+        dy, dx = move
+        new_y, new_x = y + dy, x + dx
+        return 0 <= new_y < self.board_size and 0 <= new_x < self.board_size
 
-        if board[y][x] == 0:
-            board[y][x] = curr + 1
-            if open_knight_tour_helper(board, position, curr + 1):
-                return True
-            board[y][x] = 0
+    def _get_valid_moves(self, position: tuple[int, int]) -> list[tuple[int, int]]:
+        """
+        Find all the valid positions a knight can move to from the current position.
+        """
+        return [
+            (position[0] + dy, position[1] + dx)
+            for dy, dx in self.MOVES
+            if self._is_valid_move(position, (dy, dx))
+        ]
 
-    return False
+    def _solve_knight_tour(self, position: tuple[int, int], move_number: int) -> bool:
+        """
+        Helper function to solve the Knight's Tour problem recursively.
+        """
+        if move_number == self.board_size * self.board_size + 1:
+            # Base case: all cells visited
+            return True
 
+        for next_position in self._get_valid_moves(position):
+            # Move is valid and cell is not visited yet
+            new_y, new_x = next_position
+            if self.board[new_y][new_x] == 0:
+                self.board[new_y][new_x] = move_number
+                if self._solve_knight_tour(next_position, move_number + 1):
+                    # Recursive call for the next move
+                    return True
+                # Backtrack if no solution found
+                self.board[new_y][new_x] = 0
 
-def open_knight_tour(n: int) -> list[list[int]]:
-    """
-    Find the solution for the knight tour problem for a board of size n. Raises
-    ValueError if the tour cannot be performed for the given size.
+        return False
 
-    >>> open_knight_tour(1)
-    [[1]]
+    def find_knight_tour(self) -> list[list[int]]:
+        """
+        Find a solution for the Knight's Tour problem for the initialized board size.
+        Raises ValueError if the tour cannot be performed for the given size.
 
-    >>> open_knight_tour(2)
-    Traceback (most recent call last):
-        ...
-    ValueError: Open Knight Tour cannot be performed on a board of size 2
-    """
-
-    board = [[0 for i in range(n)] for j in range(n)]
-
-    for i in range(n):
-        for j in range(n):
-            board[i][j] = 1
-            if open_knight_tour_helper(board, (i, j), 1):
-                return board
-            board[i][j] = 0
-
-    msg = f"Open Knight Tour cannot be performed on a board of size {n}"
-    raise ValueError(msg)
+        >>> solver = KnightTourSolver(1)
+        >>> solver.find_knight_tour()
+        [[1]]
+        >>> solver = KnightTourSolver(2)
+        >>> solver.find_knight_tour()
+        Traceback (most recent call last):
+            ...
+        ValueError: Knight's tour cannot be performed on a board of size 2
+        """
+        for i in range(self.board_size):
+            for j in range(self.board_size):
+                self.board[i][j] = 1
+                if self._solve_knight_tour((i, j), 2):
+                    return self.board
+                self.board[i][j] = 0
+        error_message = (
+            f"Knight's tour cannot be performed on a board of size {self.board_size}"
+        )
+        raise ValueError(error_message)
 
 
 if __name__ == "__main__":
